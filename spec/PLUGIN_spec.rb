@@ -12,7 +12,7 @@ module Danger
     describe 'with Dangerfile' do
       before do
         @dangerfile = testing_dangerfile
-        @my_plugin = @dangerfile.${PLUGIN_FILE}
+        @my_plugin = @dangerfile.my_plugin
       end
 
       # Some examples for writing tests
@@ -39,3 +39,4 @@ module Danger
     end
   end
 end
+
