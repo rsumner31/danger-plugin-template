@@ -4,49 +4,47 @@ $:.unshift((ROOT + 'lib').to_s)
 $:.unshift((ROOT + 'spec').to_s)
 
 require 'bundler/setup'
-require 'pry'
+require 'bacon'
+require 'mocha-on-bacon'
+require 'pretty_bacon'
+require 'pathname'
+require 'cocoapods'
 
-require 'rspec'
-require 'danger'
+Mocha::Configuration.prevent(:stubbing_non_existent_method)
 
-require 'danger_plugin'
+require 'cocoapods_plugin'
 
-# These functions are a subset of https://github.com/danger/danger/blob/master/spec/spec_helper.rb
-# If you are expanding these files, see if it's already been done ^.
+#-----------------------------------------------------------------------------#
 
-# A silent version of the user interface,
-# it comes with an extra function `.string` which will
-# strip all ANSI colours from the string.
+module Pod
 
-# rubocop:disable Lint/NestedMethodDefinition
-def testing_ui
-  @output = StringIO.new
-  def @output.winsize
-    [20, 9999]
+  # Disable the wrapping so the output is deterministic in the tests.
+  #
+  UI.disable_wrap = true
+
+  # Redirects the messages to an internal store.
+  #
+  module UI
+    @output = ''
+    @warnings = ''
+
+    class << self
+      attr_accessor :output
+      attr_accessor :warnings
+
+      def puts(message = '')
+        @output << "#{message}\n"
+      end
+
+      def warn(message = '', actions = [])
+        @warnings << "#{message}\n"
+      end
+
+      def print(message)
+        @output << message
+      end
+    end
   end
-
-  cork = Cork::Board.new(out: @output)
-  def cork.string
-    out.string.gsub(/\e\[([;\d]+)?m/, "")
-  end
-  cork
-end
-# rubocop:enable Lint/NestedMethodDefinition
-
-# Example environment (ENV) that would come from
-# running a PR on TravisCI
-def testing_env
-  {
-    'HAS_JOSH_K_SEAL_OF_APPROVAL' => 'true',
-    'TRAVIS_PULL_REQUEST' => '800',
-    'TRAVIS_REPO_SLUG' => 'artsy/eigen',
-    'TRAVIS_COMMIT_RANGE' => '759adcbd0d8f...13c4dc8bb61d',
-    'DANGER_GITHUB_API_TOKEN' => '123sbdq54erfsd3422gdfio'
-  }
 end
 
-# A stubbed out Dangerfile for use in tests
-def testing_dangerfile
-  env = Danger::EnvironmentManager.new(testing_env)
-  Danger::Dangerfile.new(env, testing_ui)
-end
+#-----------------------------------------------------------------------------#
